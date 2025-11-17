@@ -18,12 +18,12 @@ if (NOT LGPIO_FOUND)
 endif()
 
 include_directories(
-    ${LGPIO_INCLUDE_DIRS}
+    #${LGPIO_INCLUDE_DIRS}
     ${INDI_INCLUDE_DIRS}
 )
 
 link_directories(
-    ${LGPIO_LIBRARY_DIRS}
+    #${LGPIO_LIBRARY_DIRS}
     ${INDI_LIBRARY_DIRS}
 )
 
@@ -35,7 +35,7 @@ add_library(indi_waveshare_28byj48 SHARED
 )
 
 target_link_libraries(indi_waveshare_28byj48
-    ${LGPIO_LIBRARIES}
+    #${LGPIO_LIBRARIES}
     ${INDI_LIBRARIES}
 )
 

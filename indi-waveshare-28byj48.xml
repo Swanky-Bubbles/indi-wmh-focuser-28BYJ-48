@@ -1,18 +1,18 @@
-<?xml version="1.0"?>
-<indi_driver version="1.7">
-  <name>Waveshare_28BYJ</name>
-  <device>
-    <name>Waveshare_28BYJ_Focuser</name>
-    <type>Focuser</type>
-    <properties>
-      <number name="FOCUSER_POSITION" label="Position" format="%d" min="0" max="10000" step="1" />
-      <switch name="FOCUSER_DIRECTION" label="Direction">
-        <def on="OFF" />
-        <def on="OFF" />
-      </switch>
-      <switch name="FOCUSER_ABORT" label="Abort">
-        <def on="OFF" />
-      </switch>
-    </properties>
-  </device>
-</indi_driver>
+<?xml version="1.0" encoding="UTF-8"?>
+<device>
+    <name>Waveshare_28BYJ</name>
+    <driver>indi_waveshare_28byj48</driver>
+    <interface>Focuser</interface>
+    <description>INDI driver for Waveshare 28BYJ stepper motor using DRV8825</description>
+
+    <defswitch name="DIR" label="Direction" group="Stepper">
+        <defelem name="Forward" label="Forward"/>
+        <defelem name="Backward" label="Backward"/>
+    </defswitch>
+
+    <defswitch name="ABORT" label="Abort" group="Stepper">
+        <defelem name="Abort" label="Abort"/>
+    </defswitch>
+
+    <defnumber name="STEPS" label="Steps" group="Stepper" min="0" max="10000" step="1" format="%lld"/>
+</device>

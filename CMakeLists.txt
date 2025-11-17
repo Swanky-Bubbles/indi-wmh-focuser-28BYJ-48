@@ -11,7 +11,7 @@ find_package(INDI REQUIRED)
 
 # Ensure pkg-config can find lgpio
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(LGPIO REQUIRED lgpio)
+#pkg_check_modules(LGPIO REQUIRED lgpio)
 
 if (NOT LGPIO_FOUND)
     message(FATAL_ERROR "lgpio not found. Please install liblgpio-dev and ensure pkg-config can find it.")

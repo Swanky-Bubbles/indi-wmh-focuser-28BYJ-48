@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(INDI REQUIRED indi)
+find_package(INDI REQUIRED)
 
 include_directories(${INDI_INCLUDE_DIRS})
 link_directories(${INDI_LIBRARY_DIRS})

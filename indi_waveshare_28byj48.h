@@ -1,8 +1,8 @@
 #pragma once
 
-#include <indi/base/indibase.h>
-#include <indi/base/indidevapi.h>
-#include <indi/base/indicom.h>
+#include <indibase.h>
+#include <indidevapi.h>
+#include <indicom.h>
 #include <string>
 
 using namespace std;

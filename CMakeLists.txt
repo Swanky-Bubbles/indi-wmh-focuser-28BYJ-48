@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 find_package(PkgConfig REQUIRED)
 find_package(INDI REQUIRED)
 
-include_directories(${INDI_INCLUDE_DIRS})
+include_directories("/usr/include/libindi")
 link_directories(${INDI_LIBRARY_DIRS})
 
 add_library(indi_waveshare_28byj48 SHARED

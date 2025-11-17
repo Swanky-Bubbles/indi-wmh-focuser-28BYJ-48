@@ -81,3 +81,4 @@ void Waveshare28BYJ::ISNewSwitch(const char *dev, const char *name, const IUSwit
         // set microstepping
     }
     IDSetSwitch
+}

@@ -13,8 +13,8 @@
 #include <mutex>
 #include <chrono>
 
-#include <indidevapi.h>
-#include <indicom.h>
+#include <indi/indidevapi.h>
+#include <indi/base/indicom.h>
 #include <lgpio.h>
 
 using namespace std;

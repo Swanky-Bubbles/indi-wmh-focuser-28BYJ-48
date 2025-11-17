@@ -3,6 +3,7 @@ project(indi_waveshare_28byj48)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
 find_package(INDI REQUIRED)
 find_package(PkgConfig REQUIRED)

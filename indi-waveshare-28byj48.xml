@@ -1,50 +1,18 @@
 <?xml version="1.0"?>
-<indi_device>
+<indi_driver version="1.7">
+  <name>Waveshare_28BYJ</name>
   <device>
-    <name>Waveshare_28BYJ</name>
-    <label>Waveshare 28BYJ Stepper Motor</label>
-    <driver>indi_waveshare_28byj48</driver>
-    <driver_version>1.0</driver_version>
-    <description>Stepper driver for Waveshare Motor HAT B (28BYJ-48)</description>
+    <name>Waveshare_28BYJ_Focuser</name>
+    <type>Focuser</type>
+    <properties>
+      <number name="FOCUSER_POSITION" label="Position" format="%d" min="0" max="10000" step="1" />
+      <switch name="FOCUSER_DIRECTION" label="Direction">
+        <def on="OFF" />
+        <def on="OFF" />
+      </switch>
+      <switch name="FOCUSER_ABORT" label="Abort">
+        <def on="OFF" />
+      </switch>
+    </properties>
   </device>
-
-  <property name="MOTOR_ENABLE" label="Enable Motor" group="WAVESHARE_STEP" device="Waveshare_28BYJ" type="switch">
-    <switch name="ON" label="On" state="Off"/>
-    <switch name="OFF" label="Off" state="On"/>
-  </property>
-
-  <property name="MOTOR_DIR" label="Direction" group="WAVESHARE_STEP" device="Waveshare_28BYJ" type="switch">
-    <switch name="FORWARD" label="Forward" state="On"/>
-    <switch name="REVERSE" label="Reverse" state="Off"/>
-  </property>
-
-  <property name="STEPS" label="Steps to Move" group="WAVESHARE_STEP" device="Waveshare_28BYJ" type="number">
-    <number name="STEPS_TO_MOVE" label="Steps" min="-100000" max="100000" step="1" value="0"/>
-  </property>
-
-  <property name="POSITION" label="Position" group="WAVESHARE_STEP" device="Waveshare_28BYJ" type="number">
-    <number name="ABS_POSITION" label="Position" min="-1000000" max="1000000" step="1" value="0"/>
-  </property>
-
-  <property name="SPEED" label="Step Delay (us)" group="WAVESHARE_STEP" device="Waveshare_28BYJ" type="number">
-    <number name="DELAY_US" label="Delay (µs)" min="100" max="1000000" step="100" value="2000"/>
-  </property>
-
-  <property name="ABORT" label="Abort" group="WAVESHARE_STEP" device="Waveshare_28BYJ" type="switch">
-    <switch name="ABORT_NOW" label="Abort" state="Off"/>
-  </property>
-
-  <property name="MICROSTEP_MODE" label="Microstep Mode" group="WAVESHARE_STEP" device="Waveshare_28BYJ" type="switch">
-    <switch name="DIP" label="Use DIP" state="On"/>
-    <switch name="FULL" label="Full Step" state="Off"/>
-    <switch name="HALF" label="1/2 Step" state="Off"/>
-    <switch name="QUARTER" label="1/4 Step" state="Off"/>
-    <switch name="EIGHTH" label="1/8 Step" state="Off"/>
-    <switch name="SIXTEENTH" label="1/16 Step" state="Off"/>
-    <switch name="THIRTYSECOND" label="1/32 Step" state="Off"/>
-  </property>
-
-  <property name="STATUS" label="Status" group="WAVESHARE_STEP" device="Waveshare_28BYJ" type="text">
-    <text name="MESSAGE" label="Message" value="Idle"/>
-  </property>
-</indi_device>
+</indi_driver>

@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
 find_package(INDI REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(LGPIO REQUIRED)
+#find_package(LGPIO REQUIRED)
 
 # Source files
 set(SOURCES

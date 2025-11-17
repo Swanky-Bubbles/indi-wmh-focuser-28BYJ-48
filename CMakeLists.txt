@@ -9,9 +9,12 @@ set(BIN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/bin")
 
 # Find INDI
 find_package(INDI REQUIRED)
-find_package(lgpio REQUIRED)
 
-# Build the driver as a shared library
+# Use pkg-config for lgpio
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LGPIO REQUIRED lgpio)
+
+# Build driver
 add_library(indi_waveshare_28byj48 SHARED
     indi_waveshare_28byj48.cpp
     indi_waveshare_28byj48.h
@@ -28,6 +31,5 @@ target_link_libraries(indi_waveshare_28byj48
     pthread
 )
 
-# Install library and XML
 install(TARGETS indi_waveshare_28byj48 DESTINATION lib/indi)
 install(FILES indi_waveshare_28byj48.xml DESTINATION /usr/share/indi)

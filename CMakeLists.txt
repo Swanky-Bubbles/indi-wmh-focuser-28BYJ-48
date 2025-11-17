@@ -12,7 +12,7 @@ include_directories(${INDI_INCLUDE_DIRS})
 link_directories(${INDI_LIBRARY_DIRS})
 
 # Find lgpio
-pkg_check_modules(LGPIO REQUIRED lgpio)
+find_package(LGPIO REQUIRED)
 include_directories(${LGPIO_INCLUDE_DIRS})
 link_directories(${LGPIO_LIBRARY_DIRS})
 

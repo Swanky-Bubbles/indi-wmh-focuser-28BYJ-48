@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find INDI
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(INDI REQUIRED indi >= 2.1.6)
+find_package(INDI REQUIRED)
 include_directories(${INDI_INCLUDE_DIRS})
 link_directories(${INDI_LIBRARY_DIRS})
 

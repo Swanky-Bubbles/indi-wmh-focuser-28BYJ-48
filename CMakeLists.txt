@@ -9,6 +9,10 @@ find_package(INDI REQUIRED)
 find_package(PkgConfig REQUIRED)
 #find_package(LGPIO REQUIRED)
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${INDI_INCLUDE_DIR})
+
 # Source files
 set(SOURCES
     indi_waveshare_28byj48.cpp

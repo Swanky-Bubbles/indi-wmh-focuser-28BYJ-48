@@ -9,9 +9,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 set(CMAKE_PREFIX_PATH "/usr;/usr/local")
 find_package(INDI REQUIRED)
 
-# Ensure pkg-config can find lgpio
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(LGPIO REQUIRED lgpio)
+find_package(LGPIO REQUIRED)
 
 if (NOT LGPIO_FOUND)
     message(FATAL_ERROR "lgpio not found. Please install liblgpio-dev and ensure pkg-config can find it.")

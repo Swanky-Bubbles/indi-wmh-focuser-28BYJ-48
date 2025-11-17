@@ -7,6 +7,10 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 find_package(INDI REQUIRED)
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${INDI_INCLUDE_DIR})
+
 # --- Build shared library ---
 add_library(indi_waveshare_28byj48 SHARED indi_waveshare_28byj48.cpp)
 target_include_directories(indi_waveshare_28byj48 PRIVATE ${INDI_INCLUDE_DIRS})

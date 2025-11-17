@@ -15,6 +15,8 @@
 
 #include <indidevapi.h>
 #include <indicom.h>
+#include <indifocuser.h>   // optional if you use focuser base classes
+#include <indibase.h>
 #include <lgpio.h>
 
 using namespace std;

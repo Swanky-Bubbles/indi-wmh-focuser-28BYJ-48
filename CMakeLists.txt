@@ -11,19 +11,19 @@ find_package(INDI REQUIRED)
 
 # Ensure pkg-config can find lgpio
 find_package(PkgConfig REQUIRED)
-#pkg_check_modules(LGPIO REQUIRED lgpio)
+pkg_check_modules(LGPIO REQUIRED lgpio)
 
 if (NOT LGPIO_FOUND)
     message(FATAL_ERROR "lgpio not found. Please install liblgpio-dev and ensure pkg-config can find it.")
 endif()
 
 include_directories(
-    #${LGPIO_INCLUDE_DIRS}
+    ${LGPIO_INCLUDE_DIRS}
     ${INDI_INCLUDE_DIRS}
 )
 
 link_directories(
-    #${LGPIO_LIBRARY_DIRS}
+    ${LGPIO_LIBRARY_DIRS}
     ${INDI_LIBRARY_DIRS}
 )
 
@@ -35,7 +35,7 @@ add_library(indi_waveshare_28byj48 SHARED
 )
 
 target_link_libraries(indi_waveshare_28byj48
-    #${LGPIO_LIBRARIES}
+    ${LGPIO_LIBRARIES}
     ${INDI_LIBRARIES}
 )
 

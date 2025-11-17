@@ -1,36 +1,49 @@
-cmake_minimum_required(VERSION 3.16)
-project(indi_waveshare_28byj48)
+cmake_minimum_required(VERSION 3.10)
+project(indi_waveshare_28BYJ48)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
-# Find INDI
-find_package(PkgConfig REQUIRED)
+# Allow finding INDI
+set(CMAKE_PREFIX_PATH "/usr;/usr/local")
 find_package(INDI REQUIRED)
-include_directories(${INDI_INCLUDE_DIRS})
-link_directories(${INDI_LIBRARY_DIRS})
 
-# Find lgpio
+# Ensure pkg-config can find lgpio
+find_package(PkgConfig REQUIRED)
 pkg_check_modules(LGPIO REQUIRED lgpio)
-include_directories(${LGPIO_INCLUDE_DIRS})
-link_directories(${LGPIO_LIBRARY_DIRS})
 
-# Sources
-set(SOURCES
+if (NOT LGPIO_FOUND)
+    message(FATAL_ERROR "lgpio not found. Please install liblgpio-dev and ensure pkg-config can find it.")
+endif()
+
+include_directories(
+    ${LGPIO_INCLUDE_DIRS}
+    ${INDI_INCLUDE_DIRS}
+)
+
+link_directories(
+    ${LGPIO_LIBRARY_DIRS}
+    ${INDI_LIBRARY_DIRS}
+)
+
+add_definitions(${LGPIO_CFLAGS_OTHER})
+
+# The device source
+add_library(indi_waveshare_28byj48 SHARED
     indi_waveshare_28byj48.cpp
 )
 
-# Build shared library
-add_library(indi_waveshare_28byj48 SHARED ${SOURCES})
+target_link_libraries(indi_waveshare_28byj48
+    ${LGPIO_LIBRARIES}
+    ${INDI_LIBRARIES}
+)
 
-target_link_libraries(indi_waveshare_28byj48 ${INDI_LIBRARIES} ${LGPIO_LIBRARIES})
-
-# Install driver
+# Install for INDI/KStars
 install(TARGETS indi_waveshare_28byj48
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/indi)
+    LIBRARY DESTINATION lib/indi
+)
 
-# XML for KStars
-set(XML_FILE indi_waveshare_28byj48.xml)
-
-install(FILES ${XML_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/indi)
+install(FILES indi_waveshare_28byj48.xml
+    DESTINATION /usr/share/indi
+)

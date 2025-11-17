@@ -1,6 +1,6 @@
 #pragma once
 
-#include <indi/indibase.h>
+//#include <indi/indibase.h>
 #include <indi/indidevapi.h>
 #include <indi/base/indicom.h>
 #include <string>

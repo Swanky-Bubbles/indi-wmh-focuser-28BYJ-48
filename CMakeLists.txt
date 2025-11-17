@@ -4,12 +4,9 @@ project(indi_waveshare_28byj48)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Use pkg-config to find INDI
+find_package(INDI REQUIRED)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(INDI REQUIRED indi)
-
-# Use pkg-config to find lgpio
-pkg_check_modules(LGPIO REQUIRED lgpio)
+find_package(LGPIO REQUIRED)
 
 # Source files
 set(SOURCES

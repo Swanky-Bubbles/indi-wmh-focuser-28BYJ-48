@@ -21,7 +21,7 @@ public:
     IPState MoveRelFocuser(FocusDirection dir, uint32_t amount) override;
     bool AbortFocuser() override;
 
-    // Manual connect logic for INDI 2.1.6
+    // Manual connect for INDI 2.1.6
     bool Connect() override;
     bool Disconnect() override;
 
@@ -31,9 +31,8 @@ protected:
 private:
     std::unique_ptr<HatBMotor> motor;
 
-    // Legacy INDI Numbers
-    INumber FocusAbsPosN[1];
-    INumberVectorProperty FocusAbsPosNP;
+    INumber FocusN[1];
+    INumberVectorProperty FocusNP;
 
     INumber DelayN[1];
     INumberVectorProperty DelayNP;
@@ -49,28 +48,21 @@ private:
 
 HatBFocuser::HatBFocuser()
 {
-    // INDI 2.1.6 does NOT support CONNECTION_LOCAL
-    // so we stay with NONE and implement Connect()/Disconnect()
     setSupportedConnections(CONNECTION_NONE);
 }
 
 bool HatBFocuser::Connect()
 {
-    LOG_INFO("Connecting to Waveshare Motor HAT(B) focuser.");
-
-    // Mark device as connected
+    LOG_INFO("Connecting to Waveshare HAT(B)...");
     setConnected(true);
-
     return true;
 }
 
 bool HatBFocuser::Disconnect()
 {
     LOG_INFO("Disconnecting focuser.");
-
     motor.reset();
     setConnected(false);
-
     return true;
 }
 
@@ -78,31 +70,23 @@ bool HatBFocuser::initProperties()
 {
     Focuser::initProperties();
 
-    uint32_t cap = FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_ABORT;
-    SetCapability(cap);
+    SetCapability(FOCUSER_CAN_ABS_MOVE | FOCUSER_CAN_REL_MOVE | FOCUSER_CAN_ABORT);
 
-    // Absolute Position
-    IUFillNumber(&FocusAbsPosN[0], "POSITION", "Position", "%.0f",
-                 0, maxPos, 1, 0);
-    IUFillNumberVector(&FocusAbsPosNP, FocusAbsPosN, 1,
-                       getDeviceName(), "FOCUS_ABSOLUTE_POSITION",
-                       "Absolute Position",
+    IUFillNumber(&FocusN[0], "POSITION", "Position", "%.0f", 0, maxPos, 1, 0);
+    IUFillNumberVector(&FocusNP, FocusN, 1, getDeviceName(),
+                       "FOCUS_ABSOLUTE_POSITION", "Absolute Position",
                        MAIN_CONTROL_TAB, IP_RW, 0, IPS_IDLE);
 
-    // Delay (µs)
     IUFillNumber(&DelayN[0], "DELAY_US", "Delay (µs)", "%.0f",
-                 200, 20000, 50, delayUs);
-    IUFillNumberVector(&DelayNP, DelayN, 1,
-                       getDeviceName(), "DELAY_PER_STEP",
-                       "Delay per step",
+                 300, 20000, 50, delayUs);
+    IUFillNumberVector(&DelayNP, DelayN, 1, getDeviceName(),
+                       "DELAY_PER_STEP", "Delay per step",
                        OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
-    // Maximum position
     IUFillNumber(&MaxPosN[0], "MAX_POS", "Max Position", "%.0f",
-                 1000, 200000, 100, maxPos);
-    IUFillNumberVector(&MaxPosNP, MaxPosN, 1,
-                       getDeviceName(), "MAX_POSITION",
-                       "Max Position",
+                 2000, 200000, 100, maxPos);
+    IUFillNumberVector(&MaxPosNP, MaxPosN, 1, getDeviceName(),
+                       "MAX_POSITION", "Max Position",
                        OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
     return true;
@@ -114,7 +98,7 @@ bool HatBFocuser::updateProperties()
 
     if (isConnected())
     {
-        defineNumber(&FocusAbsPosNP);
+        defineNumber(&FocusNP);
         defineNumber(&DelayNP);
         defineNumber(&MaxPosNP);
 
@@ -139,10 +123,9 @@ bool HatBFocuser::updateProperties()
     }
     else
     {
-        deleteProperty(FocusAbsPosNP.name);
+        deleteProperty(FocusNP.name);
         deleteProperty(DelayNP.name);
         deleteProperty(MaxPosNP.name);
-
         motor.reset();
     }
 
@@ -152,10 +135,8 @@ bool HatBFocuser::updateProperties()
 bool HatBFocuser::saveConfigItems(FILE *fp)
 {
     Focuser::saveConfigItems(fp);
-
     IUSaveConfigNumber(fp, &DelayNP);
     IUSaveConfigNumber(fp, &MaxPosNP);
-
     return true;
 }
 
@@ -171,34 +152,30 @@ void HatBFocuser::doMove(int steps)
 
 IPState HatBFocuser::MoveAbsFocuser(uint32_t target)
 {
-    int32_t current = FocusAbsPosN[0].value;
-    int32_t diff    = target - current;
+    int32_t current = FocusN[0].value;
+    int32_t diff = target - current;
 
     doMove(diff);
 
-    FocusAbsPosN[0].value = target;
-    IDSetNumber(&FocusAbsPosNP, nullptr);
-
+    FocusN[0].value = target;
+    IDSetNumber(&FocusNP, nullptr);
     return IPS_OK;
 }
 
 IPState HatBFocuser::MoveRelFocuser(FocusDirection dir, uint32_t amount)
 {
-    int sign  = (dir == FOCUS_INWARD) ? 1 : -1;
+    int sign = (dir == FOCUS_INWARD) ? 1 : -1;
     int steps = sign * static_cast<int>(amount);
 
     doMove(steps);
 
-    int32_t pos = FocusAbsPosN[0].value + steps;
+    int32_t pos = FocusN[0].value + steps;
 
-    if (pos < 0)
-        pos = 0;
-    if (pos > MaxPosN[0].value)
-        pos = MaxPosN[0].value;
+    if (pos < 0) pos = 0;
+    if (pos > MaxPosN[0].value) pos = MaxPosN[0].value;
 
-    FocusAbsPosN[0].value = pos;
-    IDSetNumber(&FocusAbsPosNP, nullptr);
-
+    FocusN[0].value = pos;
+    IDSetNumber(&FocusNP, nullptr);
     return IPS_OK;
 }
 
@@ -208,17 +185,16 @@ bool HatBFocuser::AbortFocuser()
     return true;
 }
 
-// --- INDI C wrapper ---
 static HatBFocuser hatBFocuser;
 
 extern "C" {
 void ISGetProperties(const char *dev) { hatBFocuser.ISGetProperties(dev); }
-void ISNewNumber(const char *dev, const char *name, double vals[], char *names[], int n)
-{ hatBFocuser.ISNewNumber(dev, name, vals, names, n); }
-void ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int n)
-{ hatBFocuser.ISNewSwitch(dev, name, states, names, n); }
-void ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
-{ hatBFocuser.ISNewText(dev, name, texts, names, n); }
+void ISNewNumber(const char *d, const char *n, double v[], char *s[], int c)
+{ hatBFocuser.ISNewNumber(d, n, v, s, c); }
+void ISNewSwitch(const char *d, const char *n, ISState *s, char *l[], int c)
+{ hatBFocuser.ISNewSwitch(d, n, s, l, c); }
+void ISNewText(const char *d, const char *n, char *t[], char *l[], int c)
+{ hatBFocuser.ISNewText(d, n, t, l, c); }
 void ISSnoopDevice(XMLEle *root)
 { hatBFocuser.ISSnoopDevice(root); }
 }

@@ -12,10 +12,10 @@ public:
     struct Pins
     {
         int chip = 0;      // /dev/gpiochip0
-        int in1  = 12;     // Motor 1 coil A1
-        int in2  = 13;     // Motor 1 coil A2
-        int in3  = 19;     // Motor 1 coil B1
-        int in4  = 16;     // Motor 1 coil B2
+        int in1  = 12;     // Motor 1 IN1 (HAT B)
+        int in2  = 13;     // Motor 1 IN2
+        int in3  = 19;     // Motor 1 IN3
+        int in4  = 16;     // Motor 1 IN4
     };
 
     HatBMotor(const Pins &pins, int delayUs)
@@ -35,16 +35,19 @@ public:
         claim(p.in3);
         claim(p.in4);
 
-        // Half-step sequence for 28BYJ-48
+        // Half-step sequence tuned for 28BYJ-48 on Waveshare HAT(B)
+        // Order: IN1, IN2, IN3, IN4
+        // This sequence is a rotated version of the classic table,
+        // which often matches boards that wire coils in a different order.
         halfStepSeq = {
-            {1,0,0,0},
-            {1,1,0,0},
-            {0,1,0,0},
-            {0,1,1,0},
-            {0,0,1,0},
-            {0,0,1,1},
-            {0,0,0,1},
-            {1,0,0,1}
+            {1,0,0,1}, // Step 0
+            {1,0,0,0}, // Step 1
+            {1,1,0,0}, // Step 2
+            {0,1,0,0}, // Step 3
+            {0,1,1,0}, // Step 4
+            {0,0,1,0}, // Step 5
+            {0,0,1,1}, // Step 6
+            {0,0,0,1}  // Step 7
         };
     }
 
@@ -52,6 +55,7 @@ public:
     {
         if (handle >= 0)
         {
+            // De-energise coils
             lgGpioWrite(handle, p.in1, 0);
             lgGpioWrite(handle, p.in2, 0);
             lgGpioWrite(handle, p.in3, 0);
@@ -66,20 +70,19 @@ public:
     {
         std::lock_guard<std::mutex> lk(mtx);
 
-        int seqCount = static_cast<int>(halfStepSeq.size());
-        int idx = 0;
+        if (handle < 0 || steps == 0)
+            return;
 
-        int total = std::abs(steps);
-        int dir = (steps >= 0) ? 1 : -1;
+        int seqCount = static_cast<int>(halfStepSeq.size());
+        int total    = std::abs(steps);
+        int dir      = (steps >= 0) ? 1 : -1;
 
         for (int i = 0; i < total; ++i)
         {
-            if (dir > 0)
-                idx = (idx + 1) % seqCount;
-            else
-                idx = (idx - 1 + seqCount) % seqCount;
+            // advance index, keeping phase continuous across moves
+            currentIndex = (currentIndex + dir + seqCount) % seqCount;
 
-            auto &s = halfStepSeq[idx];
+            const auto &s = halfStepSeq[currentIndex];
             lgGpioWrite(handle, p.in1, s[0]);
             lgGpioWrite(handle, p.in2, s[1]);
             lgGpioWrite(handle, p.in3, s[2]);
@@ -88,7 +91,7 @@ public:
             usleep(delayUs);
         }
 
-        // optional: de-energise after movement
+        // optional: de-energise after movement so the motor doesn't get hot
         lgGpioWrite(handle, p.in1, 0);
         lgGpioWrite(handle, p.in2, 0);
         lgGpioWrite(handle, p.in3, 0);
@@ -101,4 +104,7 @@ private:
     int delayUs;
     std::mutex mtx;
     std::vector<std::vector<int>> halfStepSeq;
+
+    // keep track of current phase between moves
+    int currentIndex = 0;
 };

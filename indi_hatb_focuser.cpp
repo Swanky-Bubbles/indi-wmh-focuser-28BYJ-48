@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <mutex>
+#include <cstdint>
 
 using namespace INDI;
 
@@ -41,6 +42,9 @@ private:
     double   micronsPerStep  = 1.0;    // user-tunable scale
     int      delayUsPerStep  = 800;
 
+    // Internal absolute position (in "ticks"/steps)
+    int32_t  positionTicks   = 0;
+
     // Properties
     INumber  StepsPerRevN[1];
     INumberVectorProperty StepsPerRevNP;
@@ -72,13 +76,11 @@ bool HatBFocuser::initProperties()
     cap |= FOCUSER_CAN_ABORT;
     SetCapability(cap);
 
-    // Default position range: 0..50000 steps
-    FocusAbsPosN[0].min = 0;
-    FocusAbsPosN[0].max = 50000;
-    FocusAbsPosN[0].value = 0;
+    // NOTE: We no longer touch FocusAbsPosN here; newer libindi hides it.
 
     // StepsPerRev
-    IUFillNumber(&StepsPerRevN[0], "STEPS_PER_REV", "Steps per rev", "%.0f", 100, 100000, 1, stepsPerRev);
+    IUFillNumber(&StepsPerRevN[0], "STEPS_PER_REV", "Steps per rev", "%.0f",
+                 100, 100000, 1, stepsPerRev);
     IUFillNumberVector(&StepsPerRevNP, StepsPerRevN, 1, getDeviceName(),
                        "HAT_STEPS_PER_REV", "Stepper", OPTIONS_TAB, IP_RW, 0, IPS_IDLE);
 
@@ -155,9 +157,9 @@ void HatBFocuser::doMove(int32_t steps)
 
 IPState HatBFocuser::MoveAbsFocuser(uint32_t targetTicks)
 {
-    // Current absolute position
-    int32_t current = static_cast<int32_t>(FocusAbsPosN[0].value);
+    // Use our internal absolute position counter instead of FocusAbsPosN
     int32_t target  = static_cast<int32_t>(targetTicks);
+    int32_t current = positionTicks;
 
     int32_t delta = target - current;
     if (delta == 0)
@@ -165,22 +167,24 @@ IPState HatBFocuser::MoveAbsFocuser(uint32_t targetTicks)
 
     doMove(delta);
 
-    FocusAbsPosN[0].value = target;
-    IDSetNumber(&FocusAbsPosNP, nullptr);
+    // Update internal position
+    positionTicks = target;
 
+    // We don't touch FocusAbsPosNP directly (new libindi API hides it).
     return IPS_OK;
 }
 
 IPState HatBFocuser::MoveRelFocuser(FocusDirection dir, uint32_t ticks)
 {
-    int32_t sign = (dir == FOCUS_INWARD) ? 1 : -1;
+    int32_t sign  = (dir == FOCUS_INWARD) ? 1 : -1;
     int32_t steps = sign * static_cast<int32_t>(ticks);
 
     doMove(steps);
 
-    FocusAbsPosN[0].value += steps;
-    IDSetNumber(&FocusAbsPosNP, nullptr);
+    // Update internal absolute position
+    positionTicks += steps;
 
+    // Again, we don't touch FocusAbsPosNP directly.
     return IPS_OK;
 }
 
@@ -191,6 +195,7 @@ bool HatBFocuser::AbortFocuser()
     LOG_INFO("Abort requested (no active motion).");
     return true;
 }
+
 // Global device instance
 static HatBFocuser wsHatBFocuser;
 

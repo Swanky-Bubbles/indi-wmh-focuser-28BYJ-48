@@ -1,43 +1,30 @@
-cmake_minimum_required(VERSION 3.15)
-project(indi_drv8825_focuser)
+cmake_minimum_required(VERSION 3.5)
+project(indi_hatb_focuser CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Add custom CMake modules folder (if needed)
+# In case you have custom FindINDI.cmake
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
-# Find INDI
-find_package(INDI 2.1.6 REQUIRED COMPONENTS base)
+find_package(INDI REQUIRED)
 
-# Optionally, find libgpiod if still needed for GPIO access
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GPIOD REQUIRED libgpiod)
-
-include_directories(
-    ${INDI_INCLUDE_DIRS}
-    ${GPIOD_INCLUDE_DIRS}
+add_executable(indi_hatb_focuser
+    indi_hatb_focuser.cpp
+    hatb_motor.h
 )
 
-link_directories(
-    ${INDI_LIBRARY_DIRS}
-    ${GPIOD_LIBRARY_DIRS}
+target_include_directories(indi_hatb_focuser
+    PRIVATE
+        ${INDI_INCLUDE_DIR}
 )
 
-add_definitions(${INDI_CFLAGS_OTHER} ${GPIOD_CFLAGS_OTHER})
-
-# Build the driver
-add_library(indi_drv8825_focuser SHARED
-    indi_drv8825_focuser.cpp
-    indi_drv8825_focuser.h
-)
-
-target_link_libraries(indi_drv8825_focuser
+target_link_libraries(indi_hatb_focuser
     ${INDI_LIBRARIES}
-    ${GPIOD_LIBRARIES}
+    lgpio
 )
 
-# Install the driver to the standard INDI drivers directory
-install(TARGETS indi_drv8825_focuser
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/indi)
+install(TARGETS indi_hatb_focuser RUNTIME DESTINATION bin)
+
+# XML driver definition
+install(FILES indi_hatb_focuser.xml DESTINATION ${INDI_DATA_DIR})

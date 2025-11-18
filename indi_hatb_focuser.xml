@@ -1,0 +1,7 @@
+<driversList>
+  <driver name="Waveshare Stepper HAT(B) Focuser" label="Waveshare Stepper HAT(B) Focuser" manufacturer="Waveshare DIY">
+    <version>1.0</version>
+    <executable>indi_hatb_focuser</executable>
+    <interface>3</interface> <!-- 3 = Focuser -->
+  </driver>
+</driversList>

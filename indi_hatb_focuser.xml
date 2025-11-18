@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <driversList>
-    <devGroup group="Focusers">
-        <device label="Waveshare Motor HAT(B) Focuser">
-            <driver name="Waveshare Motor HAT(B) Focuser">indi_hatb_focuser</driver>
-            <version>1.0</version>
-        </device>
-    </devGroup>
+  <devGroup group="Focusers">
+    <device label="Waveshare Motor HAT(B) Focuser">
+      <driver name="Waveshare Motor HAT(B) Focuser">indi_hatb_focuser</driver>
+      <version>1.0</version>
+    </device>
+  </devGroup>
 </driversList>

@@ -29,6 +29,10 @@ public:
 
     bool Handshake() override { return true; }
 
+    // Connection-less device
+    bool Connect() override;
+    bool Disconnect() override;
+
 protected:
     bool saveConfigItems(FILE *fp) override;
 
@@ -61,7 +65,10 @@ private:
 
 HatBFocuser::HatBFocuser()
 {
-    // This focuser is purely GPIO; no serial/tcp
+    // Declare this device’s interface
+    setDriverInterface(FOCUSER_INTERFACE);
+
+    // Pure GPIO; no serial/tcp connection plugins
     setSupportedConnections(Focuser::CONNECTION_NONE);
 }
 
@@ -141,6 +148,23 @@ bool HatBFocuser::saveConfigItems(FILE *fp)
     IUSaveConfigNumber(fp, &StepsPerRevNP);
     IUSaveConfigNumber(fp, &MicronsPerStepNP);
     IUSaveConfigNumber(fp, &DelayPerStepNP);
+    return true;
+}
+
+bool HatBFocuser::Connect()
+{
+    // For a GPIO-only driver, there is nothing to "open" here.
+    LOG_INFO("Connecting to Waveshare Stepper HAT(B) Focuser (GPIO).");
+    // Returning true tells INDI the connection succeeded; it will
+    // mark the device connected and call updateProperties().
+    return true;
+}
+
+bool HatBFocuser::Disconnect()
+{
+    LOG_INFO("Disconnecting Waveshare Stepper HAT(B) Focuser.");
+    // If desired, you could reset or release the motor here.
+    // motor.reset();
     return true;
 }
 

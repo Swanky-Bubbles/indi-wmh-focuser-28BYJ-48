@@ -1,23 +1,36 @@
 cmake_minimum_required(VERSION 3.10)
-project(indi_waveshare_28byj48)
+project(indi_drv8825_focuser)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
+# Find pkg-config first
 find_package(PkgConfig REQUIRED)
-find_package(INDI REQUIRED)
 
-include_directories("/usr/include/libindi")
-link_directories(${INDI_LIBRARY_DIRS})
+# Find INDI
+pkg_check_modules(INDI REQUIRED libindi)
 
-add_library(indi_waveshare_28byj48 SHARED
-    indi_waveshare_28byj48.cpp
+# Find libgpiod
+pkg_check_modules(GPIOD REQUIRED libgpiod)
+
+# Include directories
+include_directories(
+    ${INDI_INCLUDE_DIRS}
+    ${GPIOD_INCLUDE_DIRS}
 )
 
-target_link_libraries(indi_waveshare_28byj48 ${INDI_LIBRARIES})
+# Source files
+set(SOURCES
+    indi_drv8825_focuser.cpp
+)
 
-# Install driver library
-install(TARGETS indi_waveshare_28byj48 DESTINATION lib/indi)
+# Build the executable
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Install XML for KStars / INDI
-install(FILES indi_waveshare_28byj48.xml DESTINATION /usr/share/indi)
+# Link libraries
+target_link_libraries(${PROJECT_NAME}
+    ${INDI_LIBRARIES}
+    ${GPIOD_LIBRARIES}
+    pthread
+)

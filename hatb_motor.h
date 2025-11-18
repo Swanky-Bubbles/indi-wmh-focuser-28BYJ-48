@@ -11,10 +11,10 @@ class HatBMotor
 public:
     struct Pins
     {
-        int chip   = 0;   // usually 0 for /dev/gpiochip0
-        int dir    = 13;  // BCM24
-        int step   = 19;  // BCM18
-        int enable = 12;   // BCM4 (active LOW)
+        int chip   = 0;   // /dev/gpiochip0
+        int dir    = 13;  // BCM13
+        int step   = 19;  // BCM19
+        int enable = 12;  // BCM12 (active LOW)
         int mode0  = 21;  // BCM21
         int mode1  = 22;  // BCM22
         int mode2  = 27;  // BCM27

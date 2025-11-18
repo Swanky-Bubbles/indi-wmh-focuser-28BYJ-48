@@ -44,7 +44,7 @@ private:
     // Parameters
     uint32_t stepsPerRev     = 2048;   // 28BYJ-48 with HR8825 full-step
     double   micronsPerStep  = 1.0;    // user-tunable scale
-    int      delayUsPerStep  = 800;
+    int      delayUsPerStep  = 2000;
 
     // Internal absolute position (in "ticks"/steps)
     int32_t  positionTicks   = 0;
@@ -122,7 +122,13 @@ bool HatBFocuser::updateProperties()
             try
             {
                 HatBMotor::Pins pins;
-                // pins defaults are for channel 2, /dev/gpiochip0
+                pins.dir    = 13;
+                pins.step   = 19;
+                pins.enable = 12;
+                pins.mode0  = 21;
+                pins.mode1  = 22;
+                pins.mode2  = 27;
+
                 motor = std::make_unique<HatBMotor>(pins, delayUsPerStep);
             }
             catch (const std::exception &e)

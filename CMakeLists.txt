@@ -5,14 +5,14 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Add custom CMake modules folder
+# Add custom CMake modules folder (if needed)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
 # Find INDI
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(INDI REQUIRED indi)
+find_package(INDI 2.1.6 REQUIRED COMPONENTS base)
 
-# Find libgpiod
+# Optionally, find libgpiod if still needed for GPIO access
+find_package(PkgConfig REQUIRED)
 pkg_check_modules(GPIOD REQUIRED libgpiod)
 
 include_directories(

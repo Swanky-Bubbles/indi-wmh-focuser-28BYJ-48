@@ -125,3 +125,4 @@ void DRV8825Focuser::stepMotor()
 {
     gpiod_line_set_value(step_line, 1);
     std::this_threa_
+}

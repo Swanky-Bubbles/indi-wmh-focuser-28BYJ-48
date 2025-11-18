@@ -1,17 +1,11 @@
 #include "indi_drv8825_focuser.h"
-#include <iostream>
+#include <sstream>
 #include <chrono>
 #include <thread>
-#include <cstring>
 
-DRV8825Focuser::DRV8825Focuser()
-    : stepPin(17), dirPin(27), enablePin(22), motorEnabled(false),
-      chip(nullptr), stepLine(nullptr), dirLine(nullptr), enableLine(nullptr)
-{
-}
+DRV8825Focuser::DRV8825Focuser() {}
 
-DRV8825Focuser::~DRV8825Focuser()
-{
+DRV8825Focuser::~DRV8825Focuser() {
     disconnectHook();
 }
 
@@ -20,12 +14,11 @@ bool DRV8825Focuser::InitProperties()
     IUFillSwitch(&dir_prop, "DIR", "Direction", "Forward", "Backward", 0, IP_RW, 0);
     IUFillSwitch(&abort_prop, "ABORT", "Abort", "Abort", nullptr, 0, IP_RW, 0);
     IUFillNumber(&steps_prop, "STEPS", "Steps", 0, 0, 10000, 0);
+    IUFillText(&status_prop, "STATUS", "Status", "");
 
     defineSwitch(&dir_prop);
     defineSwitch(&abort_prop);
     defineNumber(&steps_prop);
-
-    IUFillText(&status_prop, "STATUS", "Status", "");
     defineText(&status_prop);
 
     return true;
@@ -50,96 +43,85 @@ bool DRV8825Focuser::UpdateProperties()
     return true;
 }
 
-void DRV8825Focuser::ISNewSwitch(const char *name, const ISwitchVectorProperty *svp)
-{
-    if (!strcmp(name, "DIR"))
-    {
-        if (svp->s[0].s == ISS_ON)
-            gpiod_line_set_value(dirLine, 1);
-        else
-            gpiod_line_set_value(dirLine, 0);
-    }
-
-    if (!strcmp(name, "ABORT") && svp->s[0].s == ISS_ON)
-    {
-        writeStatus("Abort pressed");
-    }
-}
-
-void DRV8825Focuser::ISNewNumber(const char *name, const INumberVectorProperty *nvp)
-{
-    if (!strcmp(name, "STEPS"))
-    {
-        moveSteps(static_cast<long long>(nvp->n[0].value));
-    }
-}
-
 bool DRV8825Focuser::connectHook()
 {
-    chip = gpiod_chip_open_by_name("gpiochip0");
-    if (!chip)
-    {
-        writeStatus("Failed to open GPIO chip");
-        return false;
-    }
+    chip = gpiod_chip_open_by_name("gpiochip0"); // change if needed
+    if (!chip) return false;
 
-    stepLine = gpiod_chip_get_line(chip, stepPin);
-    dirLine  = gpiod_chip_get_line(chip, dirPin);
-    enableLine = gpiod_chip_get_line(chip, enablePin);
+    step_line = gpiod_chip_get_line(chip, 21); // Step GPIO
+    dir_line  = gpiod_chip_get_line(chip, 20); // Dir GPIO
+    if (!step_line || !dir_line) return false;
 
-    if (!stepLine || !dirLine || !enableLine)
-    {
-        writeStatus("Failed to get GPIO lines");
-        return false;
-    }
+    if (gpiod_line_request_output(step_line, "drv8825", 0) < 0) return false;
+    if (gpiod_line_request_output(dir_line,  "drv8825", 0) < 0) return false;
 
-    gpiod_line_request_output(stepLine, "drv8825_step", 0);
-    gpiod_line_request_output(dirLine, "drv8825_dir", 0);
-    gpiod_line_request_output(enableLine, "drv8825_enable", 0);
-
-    gpiod_line_set_value(enableLine, 0); // enable motor
-    motorEnabled = true;
-    writeStatus("DRV8825 connected");
-
+    writeStatus("Connected");
     return true;
 }
 
 bool DRV8825Focuser::disconnectHook()
 {
-    if (motorEnabled)
-    {
-        gpiod_line_set_value(enableLine, 1); // disable motor
-        motorEnabled = false;
-    }
+    running = false;
+    abort_flag = true;
+    if (stepper_thread.joinable())
+        stepper_thread.join();
 
-    if (stepLine) gpiod_line_release(stepLine);
-    if (dirLine) gpiod_line_release(dirLine);
-    if (enableLine) gpiod_line_release(enableLine);
+    if (step_line) gpiod_line_release(step_line);
+    if (dir_line) gpiod_line_release(dir_line);
     if (chip) gpiod_chip_close(chip);
 
-    writeStatus("DRV8825 disconnected");
+    writeStatus("Disconnected");
     return true;
+}
+
+void DRV8825Focuser::ISNewSwitch(const ISwitchVectorProperty *svp)
+{
+    if (!svp) return;
+
+    if (!strcmp(svp->name, "DIR"))
+    {
+        direction = (svp->s[0].s == ISS_ON) ? 1 : -1;
+    }
+    else if (!strcmp(svp->name, "ABORT") && svp->s[0].s == ISS_ON)
+    {
+        abort_flag = true;
+        writeStatus("Abort triggered");
+    }
+}
+
+void DRV8825Focuser::ISNewNumber(const INumberVectorProperty *nvp)
+{
+    if (!nvp) return;
+
+    if (!strcmp(nvp->name, "STEPS"))
+    {
+        move_steps_count = static_cast<long long>(nvp->n[0].value);
+        abort_flag = false;
+
+        if (stepper_thread.joinable())
+            stepper_thread.join();
+
+        stepper_thread = std::thread([this](){ moveSteps(move_steps_count); });
+    }
 }
 
 void DRV8825Focuser::moveSteps(long long steps)
 {
-    if (!motorEnabled)
-        return;
+    running = true;
+    int dir_value = (direction > 0) ? 1 : 0;
+    gpiod_line_set_value(dir_line, dir_value);
 
-    writeStatus("Moving steps...");
-
-    for (long long i = 0; i < steps; ++i)
+    for (long long i = 0; i < steps && !abort_flag; i++)
     {
-        gpiod_line_set_value(stepLine, 1);
-        std::this_thread::sleep_for(std::chrono::microseconds(1000));
-        gpiod_line_set_value(stepLine, 0);
-        std::this_thread::sleep_for(std::chrono::microseconds(1000));
+        stepMotor();
+        std::this_thread::sleep_for(std::chrono::milliseconds(2)); // adjust step speed
     }
 
-    writeStatus("Move complete");
+    running = false;
+    writeStatus(abort_flag ? "Aborted" : "Done");
 }
 
-void DRV8825Focuser::writeStatus(const std::string &s)
+void DRV8825Focuser::stepMotor()
 {
-    IDSetText(&status_prop, "STATUS", s.c_str());
-}
+    gpiod_line_set_value(step_line, 1);
+    std::this_threa_

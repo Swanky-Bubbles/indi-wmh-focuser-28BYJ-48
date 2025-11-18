@@ -39,15 +39,16 @@ public:
         // Order: IN1, IN2, IN3, IN4
         // This sequence is a rotated version of the classic table,
         // which often matches boards that wire coils in a different order.
+        // Corrected half-step sequence for Waveshare Motor HAT(B)
         halfStepSeq = {
-            {1,0,0,1}, // Step 0
-            {1,0,0,0}, // Step 1
-            {1,1,0,0}, // Step 2
-            {0,1,0,0}, // Step 3
-            {0,1,1,0}, // Step 4
-            {0,0,1,0}, // Step 5
-            {0,0,1,1}, // Step 6
-            {0,0,0,1}  // Step 7
+            {1,1,0,0},  // Step 0
+            {0,1,1,0},  // Step 1
+            {0,0,1,1},  // Step 2
+            {1,0,0,1},  // Step 3
+            {1,0,0,0},  // Step 4
+            {0,1,0,0},  // Step 5
+            {0,0,1,0},  // Step 6
+            {0,0,0,1}   // Step 7
         };
     }
 

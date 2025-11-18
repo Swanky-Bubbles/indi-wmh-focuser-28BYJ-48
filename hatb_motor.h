@@ -4,13 +4,14 @@
 #include <unistd.h>
 #include <mutex>
 #include <vector>
+#include <cmath>
 
 class HatBMotor
 {
 public:
     struct Pins
     {
-        int chip = 0;      // /dev/gpiochip0 owns GPIO12/13/19/16 on Pi 4
+        int chip = 0;      // /dev/gpiochip0
         int in1  = 12;     // Motor 1 coil A1
         int in2  = 13;     // Motor 1 coil A2
         int in3  = 19;     // Motor 1 coil B1
@@ -34,6 +35,7 @@ public:
         claim(p.in3);
         claim(p.in4);
 
+        // Half-step sequence for 28BYJ-48
         halfStepSeq = {
             {1,0,0,0},
             {1,1,0,0},
@@ -50,7 +52,6 @@ public:
     {
         if (handle >= 0)
         {
-            // de-energize
             lgGpioWrite(handle, p.in1, 0);
             lgGpioWrite(handle, p.in2, 0);
             lgGpioWrite(handle, p.in3, 0);
@@ -61,20 +62,22 @@ public:
 
     void setDelayUs(int d) { delayUs = d; }
 
-    // Steps may be positive or negative
     void moveSteps(int steps)
     {
         std::lock_guard<std::mutex> lk(mtx);
 
-        int seqCount = halfStepSeq.size();
+        int seqCount = static_cast<int>(halfStepSeq.size());
         int idx = 0;
 
-        for (int i = 0; i < abs(steps); i++)
+        int total = std::abs(steps);
+        int dir = (steps >= 0) ? 1 : -1;
+
+        for (int i = 0; i < total; ++i)
         {
-            if (steps > 0)
-                idx = (idx + 1) % seqCount;      // forward
+            if (dir > 0)
+                idx = (idx + 1) % seqCount;
             else
-                idx = (idx - 1 + seqCount) % seqCount;  // backward
+                idx = (idx - 1 + seqCount) % seqCount;
 
             auto &s = halfStepSeq[idx];
             lgGpioWrite(handle, p.in1, s[0]);
@@ -84,6 +87,12 @@ public:
 
             usleep(delayUs);
         }
+
+        // optional: de-energise after movement
+        lgGpioWrite(handle, p.in1, 0);
+        lgGpioWrite(handle, p.in2, 0);
+        lgGpioWrite(handle, p.in3, 0);
+        lgGpioWrite(handle, p.in4, 0);
     }
 
 private:
@@ -91,7 +100,5 @@ private:
     int handle = -1;
     int delayUs;
     std::mutex mtx;
-
-    // 8-step half-step sequence
     std::vector<std::vector<int>> halfStepSeq;
 };

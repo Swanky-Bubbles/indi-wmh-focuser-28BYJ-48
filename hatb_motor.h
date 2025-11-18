@@ -66,6 +66,30 @@ public:
     }
 
     void setDelayUs(int d) { delayUs = d; }
+    
+    void HatBMotor::testCoils()
+    {
+        int seq[4][4] = {
+            {1,0,0,0}, // only IN1 on
+            {0,1,0,0}, // only IN2 on
+            {0,0,1,0}, // only IN3 on
+            {0,0,0,1}  // only IN4 on
+        };
+
+        for (int i = 0; i < 4; i++) {
+            lgGpioWrite(handle, p.in1, seq[i][0]);
+            lgGpioWrite(handle, p.in2, seq[i][1]);
+            lgGpioWrite(handle, p.in3, seq[i][2]);
+            lgGpioWrite(handle, p.in4, seq[i][3]);
+
+            usleep(800000); // 0.8 seconds
+        }
+
+        lgGpioWrite(handle, p.in1, 0);
+        lgGpioWrite(handle, p.in2, 0);
+        lgGpioWrite(handle, p.in3, 0);
+        lgGpioWrite(handle, p.in4, 0);
+    }
 
     void moveSteps(int steps)
     {
